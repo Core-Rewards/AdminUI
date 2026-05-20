@@ -1,5 +1,6 @@
 import { type Key, useMemo, useState } from "react";
 import {
+    AlertTriangle,
     Edit05,
     FilterLines,
     Mail01,
@@ -244,6 +245,8 @@ export const ParticipantsPage = () => {
     const [bulkModalOpen, setBulkModalOpen] = useState(false);
     const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
 
+    const isProgramSelected = programFilter !== "all";
+
     const filteredParticipants = useMemo(() => {
         return participants.filter((p) => {
             const matchesSearch =
@@ -305,19 +308,42 @@ export const ParticipantsPage = () => {
     return (
         <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
             {/* Header */}
+            <div>
+                <h1 className="text-display-xs font-semibold text-primary">Participants</h1>
+                <p className="mt-1 text-sm text-tertiary">Manage platform participants and admins.</p>
+            </div>
+
+            {/* Program selector — required before adding participants */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-display-xs font-semibold text-primary">Participants</h1>
-                    <p className="mt-1 text-sm text-tertiary">Manage platform participants and admins.</p>
+                <div className="flex flex-1 items-center gap-4">
+                    <div className="w-full max-w-xs">
+                        <Select
+                            aria-label="Select program"
+                            items={filterProgramItems}
+                            selectedKey={programFilter}
+                            onSelectionChange={setProgramFilter}
+                            size="md"
+                        >
+                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                        </Select>
+                    </div>
+                    {!isProgramSelected && (
+                        <p className="ml-auto flex items-center gap-1.5 text-right text-sm text-tertiary">
+                            <AlertTriangle aria-hidden="true" className="size-4 text-fg-warning-secondary" />
+                            Select a program to add participants.
+                        </p>
+                    )}
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button size="md" color="primary" iconLeading={UserPlus01} onPress={handleAdd}>
-                        Add Participant
-                    </Button>
-                    <Button size="md" color="secondary" iconLeading={Upload01} onPress={() => setBulkModalOpen(true)}>
-                        Bulk Add Participants
-                    </Button>
-                </div>
+                {isProgramSelected && (
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <Button size="md" color="primary" iconLeading={UserPlus01} onPress={handleAdd}>
+                            Add Participant
+                        </Button>
+                        <Button size="md" color="secondary" iconLeading={Upload01} onPress={() => setBulkModalOpen(true)}>
+                            Bulk Add Participants
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Metrics */}
@@ -349,15 +375,6 @@ export const ParticipantsPage = () => {
                                 onSelectionChange={setRoleFilter}
                                 size="sm"
                                 icon={FilterLines}
-                            >
-                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                            </Select>
-                            <Select
-                                aria-label="Filter by program"
-                                items={filterProgramItems}
-                                selectedKey={programFilter}
-                                onSelectionChange={setProgramFilter}
-                                size="sm"
                             >
                                 {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                             </Select>
