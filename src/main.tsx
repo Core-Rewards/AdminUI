@@ -6,6 +6,7 @@ import { DashboardHomeTwo } from "@/pages/dashboard-home-two";
 import { ChatResultPage } from "@/pages/chat-result";
 import { IssuePointsPage } from "@/pages/issue-points";
 import { NotFound } from "@/pages/not-found";
+import { ParticipantDetailsPage } from "@/pages/participant-details";
 import { ParticipantsPage } from "@/pages/participants";
 import { PromotionsPage } from "@/pages/promotions";
 import { ReportingPage } from "@/pages/reporting";
@@ -25,6 +26,7 @@ createRoot(document.getElementById("root")!).render(
                             <Route path="home-two/result" element={<ChatResultPage />} />
                             <Route path="issue-points" element={<IssuePointsPage />} />
                             <Route path="participants" element={<ParticipantsPage />} />
+                            <Route path="participants/:id" element={<ParticipantDetailsPage />} />
                             <Route path="promotions" element={<PromotionsPage />} />
                             <Route path="reporting" element={<ReportingPage />} />
                         </Route>

@@ -7,9 +7,11 @@ import {
     CoinsStacked01,
     CurrencyDollar,
     Send01,
+    Upload01,
     Users01,
 } from "@untitledui/icons";
 import { BulkUploadContent } from "@/components/application/bulk-upload";
+import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Table, TableCard } from "@/components/application/table/table";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { Badge, BadgeWithIcon } from "@/components/base/badges/badges";
@@ -159,6 +161,7 @@ const StatusBadge = ({ status }: { status: HistoryRow["status"] }) => {
 
 export const IssuePointsPage = () => {
     const [rewardType, setRewardType] = useState<"points" | "usd">("points");
+    const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
     return (
         <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
@@ -175,16 +178,22 @@ export const IssuePointsPage = () => {
                 <MetricCard label="Rewards This Month" value="$1,280" change="8.1%" changeDirection="down" icon={Award01} />
             </div>
 
-            {/* Issue form + CSV upload */}
-            <div className="grid gap-6 lg:grid-cols-2">
-                {/* Individual reward form */}
+            {/* Issue reward form */}
+            <div>
                 <div className="rounded-xl border border-secondary bg-primary p-5">
-                    <div className="mb-5 flex items-start justify-between">
+                    <div className="mb-5 flex items-start justify-between gap-4">
                         <div>
                             <h2 className="text-md font-semibold text-primary">Issue Reward</h2>
                             <p className="mt-0.5 text-sm text-tertiary">Send points or dollars to a participant.</p>
                         </div>
-                        <img src="/icon_issue-reward.png" alt="Issue reward" className="size-16 object-contain" />
+                        <Button
+                            size="md"
+                            color="secondary"
+                            iconLeading={Upload01}
+                            onPress={() => setBulkModalOpen(true)}
+                        >
+                            Bulk Issue
+                        </Button>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -262,19 +271,6 @@ export const IssuePointsPage = () => {
                     </div>
                 </div>
 
-                {/* CSV upload — 1/4 width */}
-                <div className="rounded-xl border border-secondary bg-secondary p-5">
-                    <div className="mb-5 flex items-start justify-between">
-                        <h2 className="text-md font-semibold text-primary">Bulk Issue Rewards</h2>
-                        <img src="/icon_bulk-issue-reward.png" alt="Bulk issue rewards" className="size-16 object-contain" />
-                    </div>
-
-                    <BulkUploadContent
-                        description="Upload a CSV to reward multiple participants at once."
-                        processLabel="Process Upload"
-                        templateHref="/dashboard/issue-points/template.csv"
-                    />
-                </div>
             </div>
 
             {/* Issuance history */}
@@ -329,6 +325,41 @@ export const IssuePointsPage = () => {
                     </Table.Body>
                 </Table>
             </TableCard.Root>
+
+            {/* Bulk Issue modal */}
+            <ModalOverlay isOpen={bulkModalOpen} onOpenChange={setBulkModalOpen}>
+                <Modal className="max-w-lg">
+                    <Dialog className="w-full">
+                        <div className="w-full rounded-xl bg-primary shadow-xl ring-1 ring-secondary">
+                            <div className="border-b border-secondary px-6 pt-6 pb-5">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-full bg-brand-secondary">
+                                        <Upload01 className="size-5 text-fg-brand-primary" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-md font-semibold text-primary">Bulk Issue Rewards</h2>
+                                        <p className="text-sm text-tertiary">
+                                            Upload a CSV to reward multiple participants at once.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="px-6 py-5">
+                                <BulkUploadContent
+                                    description="Upload a CSV with columns for participant, amount, type, and message."
+                                    processLabel="Process Upload"
+                                    templateHref="/dashboard/issue-points/template.csv"
+                                />
+                            </div>
+                            <div className="flex justify-end border-t border-secondary px-6 py-4">
+                                <Button color="secondary" size="md" onPress={() => setBulkModalOpen(false)}>
+                                    Close
+                                </Button>
+                            </div>
+                        </div>
+                    </Dialog>
+                </Modal>
+            </ModalOverlay>
         </div>
     );
 };

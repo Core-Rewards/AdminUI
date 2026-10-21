@@ -1,6 +1,9 @@
 import { type Key, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import {
+    AlertTriangle,
     Edit05,
+    Eye,
     FilterLines,
     Mail01,
     Plus,
@@ -20,64 +23,16 @@ import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
-import type { SelectItemType } from "@/components/base/select/select";
 import { Select } from "@/components/base/select/select";
-import { cx } from "@/utils/cx";
-
-// ─── Types ───────────────────────────────────────────────────
-
-type Role = "participant" | "admin";
-type Status = "active" | "inactive";
-type Program = "US" | "Australia" | "Canada" | "China" | "Japan" | "Mexico" | "UK";
-
-interface Participant {
-    id: string;
-    name: string;
-    email: string;
-    avatar: string;
-    role: Role;
-    status: Status;
-    program: Program;
-    joinedDate: string;
-    pointsBalance: number;
-}
-
-// ─── Mock data ───────────────────────────────────────────────
-
-const initialParticipants: Participant[] = [
-    { id: "1", name: "Olivia Rhye", email: "olivia@corerewards.com", avatar: "https://www.untitledui.com/images/avatars/olivia-rhye?fm=webp&q=80", role: "admin", status: "active", program: "US", joinedDate: "Jan 6, 2026", pointsBalance: 3200 },
-    { id: "2", name: "Phoenix Baker", email: "phoenix@corerewards.com", avatar: "https://www.untitledui.com/images/avatars/phoenix-baker?fm=webp&q=80", role: "participant", status: "active", program: "UK", joinedDate: "Feb 12, 2026", pointsBalance: 1450 },
-    { id: "3", name: "Lana Steiner", email: "lana@corerewards.com", avatar: "https://www.untitledui.com/images/avatars/lana-steiner?fm=webp&q=80", role: "participant", status: "active", program: "Canada", joinedDate: "Mar 1, 2026", pointsBalance: 820 },
-    { id: "4", name: "Demi Wilkinson", email: "demi@corerewards.com", avatar: "https://www.untitledui.com/images/avatars/demi-wilkinson?fm=webp&q=80", role: "admin", status: "active", program: "Australia", joinedDate: "Jan 15, 2026", pointsBalance: 5100 },
-    { id: "5", name: "Candice Wu", email: "candice@corerewards.com", avatar: "https://www.untitledui.com/images/avatars/candice-wu?fm=webp&q=80", role: "participant", status: "inactive", program: "China", joinedDate: "Feb 28, 2026", pointsBalance: 0 },
-    { id: "6", name: "Natali Craig", email: "natali@corerewards.com", avatar: "https://www.untitledui.com/images/avatars/natali-craig?fm=webp&q=80", role: "participant", status: "active", program: "Japan", joinedDate: "Mar 20, 2026", pointsBalance: 640 },
-    { id: "7", name: "Drew Cano", email: "drew@corerewards.com", avatar: "https://www.untitledui.com/images/avatars/drew-cano?fm=webp&q=80", role: "participant", status: "active", program: "Mexico", joinedDate: "Apr 2, 2026", pointsBalance: 280 },
-];
-
-const roleItems: SelectItemType[] = [
-    { id: "participant", label: "Participant" },
-    { id: "admin", label: "Admin" },
-];
-
-const filterRoleItems: SelectItemType[] = [
-    { id: "all", label: "All Roles" },
-    ...roleItems,
-];
-
-const programItems: SelectItemType[] = [
-    { id: "US", label: "US" },
-    { id: "Australia", label: "Australia" },
-    { id: "Canada", label: "Canada" },
-    { id: "China", label: "China" },
-    { id: "Japan", label: "Japan" },
-    { id: "Mexico", label: "Mexico" },
-    { id: "UK", label: "UK" },
-];
-
-const filterProgramItems: SelectItemType[] = [
-    { id: "all", label: "All Programs" },
-    ...programItems,
-];
+import {
+    filterProgramItems,
+    filterRoleItems,
+    initialParticipants,
+    roleItems,
+    type Participant,
+    type Role,
+    type Status,
+} from "@/pages/participants-data";
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -207,22 +162,22 @@ const ParticipantModal = ({
 
 const RowActions = ({
     participant,
-    onEdit,
+    onView,
     onDelete,
 }: {
     participant: Participant;
-    onEdit: (p: Participant) => void;
+    onView: (p: Participant) => void;
     onDelete: (id: string) => void;
 }) => (
     <Dropdown.Root>
         <Dropdown.DotsButton />
         <Dropdown.Popover>
             <Dropdown.Menu onAction={(key) => {
-                if (key === "edit") onEdit(participant);
+                if (key === "view") onView(participant);
                 if (key === "delete") onDelete(participant.id);
             }}>
                 <Dropdown.Section>
-                    <Dropdown.Item id="edit" label="Edit" icon={Edit05} />
+                    <Dropdown.Item id="view" label="View" icon={Eye} />
                 </Dropdown.Section>
                 <Dropdown.Separator />
                 <Dropdown.Section>
@@ -236,6 +191,7 @@ const RowActions = ({
 // ─── Page ────────────────────────────────────────────────────
 
 export const ParticipantsPage = () => {
+    const navigate = useNavigate();
     const [participants, setParticipants] = useState(initialParticipants);
     const [search, setSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState<Key>("all");
@@ -243,6 +199,8 @@ export const ParticipantsPage = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [bulkModalOpen, setBulkModalOpen] = useState(false);
     const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
+
+    const isProgramSelected = programFilter !== "all";
 
     const filteredParticipants = useMemo(() => {
         return participants.filter((p) => {
@@ -270,9 +228,8 @@ export const ParticipantsPage = () => {
         setModalOpen(true);
     };
 
-    const handleEdit = (p: Participant) => {
-        setEditingParticipant(p);
-        setModalOpen(true);
+    const handleView = (p: Participant) => {
+        navigate(`/dashboard/participants/${p.id}`);
     };
 
     const handleDelete = (id: string) => {
@@ -305,19 +262,42 @@ export const ParticipantsPage = () => {
     return (
         <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
             {/* Header */}
+            <div>
+                <h1 className="text-display-xs font-semibold text-primary">Participants</h1>
+                <p className="mt-1 text-sm text-tertiary">Manage platform participants and admins.</p>
+            </div>
+
+            {/* Program selector — required before adding participants */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-display-xs font-semibold text-primary">Participants</h1>
-                    <p className="mt-1 text-sm text-tertiary">Manage platform participants and admins.</p>
+                <div className="flex flex-1 items-center gap-4">
+                    <div className="w-full max-w-xs">
+                        <Select
+                            aria-label="Select program"
+                            items={filterProgramItems}
+                            selectedKey={programFilter}
+                            onSelectionChange={setProgramFilter}
+                            size="md"
+                        >
+                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                        </Select>
+                    </div>
+                    {!isProgramSelected && (
+                        <p className="ml-auto flex items-center gap-1.5 text-right text-sm text-tertiary">
+                            <AlertTriangle aria-hidden="true" className="size-4 text-fg-warning-secondary" />
+                            Select a program to add participants.
+                        </p>
+                    )}
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button size="md" color="primary" iconLeading={UserPlus01} onPress={handleAdd}>
-                        Add Participant
-                    </Button>
-                    <Button size="md" color="secondary" iconLeading={Upload01} onPress={() => setBulkModalOpen(true)}>
-                        Bulk Add Participants
-                    </Button>
-                </div>
+                {isProgramSelected && (
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <Button size="md" color="primary" iconLeading={UserPlus01} onPress={handleAdd}>
+                            Add Participant
+                        </Button>
+                        <Button size="md" color="secondary" iconLeading={Upload01} onPress={() => setBulkModalOpen(true)}>
+                            Bulk Add Participants
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Metrics */}
@@ -349,15 +329,6 @@ export const ParticipantsPage = () => {
                                 onSelectionChange={setRoleFilter}
                                 size="sm"
                                 icon={FilterLines}
-                            >
-                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                            </Select>
-                            <Select
-                                aria-label="Filter by program"
-                                items={filterProgramItems}
-                                selectedKey={programFilter}
-                                onSelectionChange={setProgramFilter}
-                                size="sm"
                             >
                                 {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                             </Select>
@@ -402,7 +373,7 @@ export const ParticipantsPage = () => {
                                     </span>
                                 </Table.Cell>
                                 <Table.Cell>
-                                    <RowActions participant={row} onEdit={handleEdit} onDelete={handleDelete} />
+                                    <RowActions participant={row} onView={handleView} onDelete={handleDelete} />
                                 </Table.Cell>
                             </Table.Row>
                         )}
