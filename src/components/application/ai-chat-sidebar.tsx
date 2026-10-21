@@ -394,7 +394,6 @@ export const AiChatMobileTrigger = () => {
                             <AriaDialog className="flex h-full flex-col bg-primary outline-hidden focus:outline-hidden">
                                 {/* Header */}
                                 <div className="flex items-center gap-2 border-b border-secondary px-4 py-3">
-                                    <Stars02 className="size-5 text-fg-brand-primary" />
                                     <h2 className="text-sm font-semibold text-primary">AI Assistant</h2>
                                 </div>
 
@@ -408,22 +407,71 @@ export const AiChatMobileTrigger = () => {
     );
 };
 
-/** Desktop sidebar for AI chat. */
-export const AiChatSidebar = ({ className }: { className?: string }) => {
+interface AiChatSidebarProps {
+    /** Whether the drawer is expanded. */
+    isOpen: boolean;
+    /** Called when the user closes the drawer. */
+    onClose: () => void;
+    className?: string;
+}
+
+/**
+ * Desktop sidebar for AI chat.
+ *
+ * Collapses by animating its own width to zero while the inner panel keeps a
+ * fixed width and slides out, so the chat content never squashes mid-transition.
+ * `overflow-hidden` lives on the sticky element itself, which keeps `position: sticky`
+ * working (an overflow-hidden *ancestor* would break it).
+ */
+export const AiChatSidebar = ({ isOpen, onClose, className }: AiChatSidebarProps) => {
     return (
         <aside
+            aria-hidden={!isOpen}
+            inert={!isOpen || undefined}
             className={cx(
-                "sticky top-0 flex h-dvh w-full flex-col border-l border-secondary bg-primary lg:w-80 xl:w-96",
+                "sticky top-0 flex h-dvh shrink-0 flex-col overflow-hidden border-l bg-primary transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
+                isOpen ? "w-full border-secondary lg:w-80 xl:w-96" : "w-0 border-transparent",
                 className,
             )}
         >
-            {/* Header */}
-            <div className="flex items-center gap-2 border-b border-secondary px-4 py-3">
-                <Stars02 className="size-5 text-fg-brand-primary" />
-                <h2 className="text-sm font-semibold text-primary">AI Assistant</h2>
-            </div>
+            <div
+                className={cx(
+                    "flex h-full w-full shrink-0 flex-col transition-[opacity,transform] duration-300 ease-in-out motion-reduce:transition-none lg:w-80 xl:w-96",
+                    isOpen ? "translate-x-0 opacity-100" : "translate-x-6 opacity-0",
+                )}
+            >
+                {/* Header */}
+                <div className="flex items-center gap-2 border-b border-secondary px-4 py-3">
+                    <h2 className="flex-1 text-sm font-semibold text-primary">AI Assistant</h2>
+                    <AriaButton
+                        aria-label="Close AI assistant"
+                        onPress={onClose}
+                        className="flex cursor-pointer items-center justify-center rounded-md p-1 text-fg-quaternary outline-focus-ring transition duration-100 ease-linear hover:bg-primary_hover hover:text-fg-quaternary_hover focus-visible:outline-2 focus-visible:outline-offset-2"
+                    >
+                        <CloseIcon className="size-5" />
+                    </AriaButton>
+                </div>
 
-            <AiChatContent />
+                <AiChatContent />
+            </div>
         </aside>
+    );
+};
+
+/** Sparkles button that expands the AI chat drawer. */
+export const AiChatTrigger = ({ isOpen, onPress, className }: { isOpen: boolean; onPress: () => void; className?: string }) => {
+    return (
+        <AriaButton
+            aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
+            aria-expanded={isOpen}
+            onPress={onPress}
+            className={cx(
+                "flex cursor-pointer items-center justify-center rounded-md p-1 outline-focus-ring transition duration-100 ease-linear focus-visible:outline-2 focus-visible:outline-offset-2",
+                isOpen ? "bg-brand-secondary text-fg-brand-primary" : "text-fg-quaternary hover:bg-primary_hover hover:text-fg-brand-primary",
+                className,
+            )}
+        >
+            <Stars02 className="size-5" />
+        </AriaButton>
     );
 };
